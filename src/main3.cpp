@@ -169,51 +169,33 @@ std::vector<Triangle> load_mesh(const std::string& filename){
         return load_obj(filename);
     throw std::runtime_error("Unsupported mesh format");
 }
+float mesh_rot_x = 0.0f;
+float mesh_rot_y = 0.0f;
+float mesh_rot_z = 0.0f;
 
-void orient_mesh_to_wind(std::vector<Triangle>& triangles){
-    float minx=FLT_MAX,minz=FLT_MAX;
-    float maxx=-FLT_MAX,maxz=-FLT_MAX;
+void orient_mesh_to_wind(std::vector<Triangle>& triangles) {
+    float cx = std::cos(mesh_rot_x), sx = std::sin(mesh_rot_x);
+    float cy = std::cos(mesh_rot_y), sy = std::sin(mesh_rot_y);
+    float cz = std::cos(mesh_rot_z), sz = std::sin(mesh_rot_z);
 
-    for(auto& t:triangles){
-        for(auto v:{t.a,t.b,t.c}){
-            minx=std::min(minx,v.x);
-            maxx=std::max(maxx,v.x);
-            minz=std::min(minz,v.z);
-            maxz=std::max(maxz,v.z);
-        }
-    }
+    for (auto& t : triangles) {
+        auto rot = [&](Vec3 v) {
+            float y1 = v.y * cx - v.z * sx;
+            float z1 = v.y * sx + v.z * cx;
 
-    float dx=maxx-minx;
-    float dz=maxz-minz;
+            float x2 = v.x * cy + z1 * sy;
+            float z2 = -v.x * sy + z1 * cy;
 
-        for(auto& t:triangles){
-            auto rot=[](Vec3 v){
-                return Vec3{v.z,v.y,-v.x};
-            };
-            t.a=rot(t.a);
-            t.b=rot(t.b);
-            t.c=rot(t.c);
-        }
+            float x3 = x2 * cz - y1 * sz;
+            float y3 = x2 * sz + y1 * cz;
 
-
-    float front=0.0f;
-    float back=0.0f;
-
-    for(auto& t:triangles){
-        for(auto v:{t.a,t.b,t.c}){
-            front+=v.x;
-        }
-    }
-
-    if(front>0){
-        for(auto& t:triangles){
-            t.a.x=-t.a.x;
-            t.b.x=-t.b.x;
-            t.c.x=-t.c.x;
-        }
+            return Vec3{x3, y3, z2};
+        };
+        t.a = rot(t.a);
+        t.b = rot(t.b);
+        t.c = rot(t.c);
     }
 }
-
 void normalize_mesh(std::vector<Triangle>& triangles,float target_size){
     float minx=FLT_MAX,miny=FLT_MAX,minz=FLT_MAX;
     float maxx=-FLT_MAX,maxy=-FLT_MAX,maxz=-FLT_MAX;
@@ -241,8 +223,8 @@ void normalize_mesh(std::vector<Triangle>& triangles,float target_size){
 
 int main(int argc, char* argv[])
 {
-    std::vector<Triangle> triangles = load_mesh("../porsche_gt3rs_spoiler.obj");
-
+    const std::vector<Triangle> base_triangles = load_mesh("../porsche_gt3rs_spoiler.obj");
+    std::vector<Triangle> triangles = base_triangles;
     std::cout << "triangles: "
               << triangles.size()
               << "\n";
@@ -391,16 +373,13 @@ int main(int argc, char* argv[])
 
 
 
-    while(running)
-    {
-        while(SDL_PollEvent(&event))
-        {
+    while(running){
+        while(SDL_PollEvent(&event)){
             if(event.type == SDL_QUIT)
                 running = false;
 
             if(event.type == SDL_MOUSEBUTTONDOWN &&
-               event.button.clicks == 2)
-            {
+               event.button.clicks == 2){
                 Uint32 flags = SDL_GetWindowFlags(window);
 
                 if(flags & SDL_WINDOW_MAXIMIZED)
@@ -412,16 +391,14 @@ int main(int argc, char* argv[])
                 scale += static_cast<float>(event.wheel.y);
             }
 
-            if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
-            {
+            if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT){
                 bool dragging = true;
 
                 // Clear out any old relative mouse delta accumulated before clicking
                 int flush_x, flush_y;
                 SDL_GetRelativeMouseState(&flush_x, &flush_y);
 
-                while (dragging)
-                {
+                while (dragging){
                     SDL_PumpEvents(); // Pull latest OS hardware signals
 
                     // Break out instantly if they let go of left click
@@ -452,9 +429,9 @@ int main(int argc, char* argv[])
                    event.key.keysym.sym == SDLK_PLUS)
                 {
                     inlet_speed += speed_increment;
-                    std::cout << "Wind speed: "
-                              << inlet_speed
-                              << "\n";
+                    // std::cout << "Wind speed: "
+                    //           << inlet_speed
+                    //           << "\n";
                 }
 
                 if(event.key.keysym.sym == SDLK_MINUS)
@@ -464,27 +441,72 @@ int main(int argc, char* argv[])
                     if(inlet_speed < 0.0f)
                         inlet_speed = 0.0f;
 
-                    std::cout << "Wind speed: "
-                              << inlet_speed
-                              << "\n";
+                    // std::cout << "Wind speed: "
+                    //           << inlet_speed
+                    //           << "\n";
+                }
+                if (event.key.keysym.sym == SDLK_i) {
+                    mesh_rot_x += M_PI / 2.0f;
+                }
+                if (event.key.keysym.sym == SDLK_o) {
+                    mesh_rot_y += M_PI / 2.0f;
+                }
+                if (event.key.keysym.sym == SDLK_p) {
+                    mesh_rot_z += M_PI / 2.0f;
+                }
+
+                if (event.key.keysym.sym == SDLK_i || event.key.keysym.sym == SDLK_o || event.key.keysym.sym == SDLK_p) {
+                    triangles = base_triangles; // Reset directly from RAM copy
+
+                    for (auto& t : triangles) {
+                        t.a.x *= mesh_scale; t.a.y *= mesh_scale; t.a.z *= mesh_scale;
+                        t.b.x *= mesh_scale; t.b.y *= mesh_scale; t.b.z *= mesh_scale;
+                        t.c.x *= mesh_scale; t.c.y *= mesh_scale; t.c.z *= mesh_scale;
+                    }
+                    normalize_mesh(triangles, 6.0f);
+                    orient_mesh_to_wind(triangles);
+
+                    float minx = FLT_MAX, miny = FLT_MAX, minz = FLT_MAX;
+                    float maxx = -FLT_MAX, maxy = -FLT_MAX, maxz = -FLT_MAX;
+                    for (auto& t : triangles) {
+                        for (auto v : {t.a, t.b, t.c}) {
+                            minx = std::min(minx, v.x); maxx = std::max(maxx, v.x);
+                            miny = std::min(miny, v.y); maxy = std::max(maxy, v.y);
+                            minz = std::min(minz, v.z); maxz = std::max(maxz, v.z);
+                        }
+                    }
+                    cx = (minx + maxx) * 0.5f; cy = (miny + maxy) * 0.5f; cz = (minz + maxz) * 0.5f;
+                    for (auto& t : triangles) {
+                        t.a.x -= cx; t.a.y -= cy; t.a.z -= cz;
+                        t.b.x -= cx; t.b.y -= cy; t.b.z -= cz;
+                        t.c.x -= cx; t.c.y -= cy; t.c.z -= cz;
+                    }
+
+                    mysolver = solver_3d(80, 50, 50);
+                    solid_count = 0;
+                    for (auto& t : triangles) {
+                        const int steps = 10;
+                        for (int i = 0; i <= steps; i++) {
+                            for (int j = 0; j <= steps - i; j++) {
+                                float a = (float)i / steps; float b = (float)j / steps; float c = 1.0f - a - b;
+                                Vec3 p{
+                                    t.a.x * a + t.b.x * b + t.c.x * c,
+                                    t.a.y * a + t.b.y * b + t.c.y * c,
+                                    t.a.z * a + t.b.z * b + t.c.z * c
+                                };
+                                voxelize(p);
+                            }
+                        }
+                    }
                 }
             }
         }
-
-
         Uint64 t0 = SDL_GetPerformanceCounter();
-
-
         mysolver.step(dt, inlet_speed);
-
         std::stringstream title;
         title<<"3D Wind Tunnel, Inlet Speed: "<< inlet_speed;
         SDL_SetWindowTitle(window,title.str().c_str());
-
-
         Uint64 t1 = SDL_GetPerformanceCounter();
-
-
         SDL_SetRenderDrawColor(
             renderer,
             0,
@@ -520,12 +542,9 @@ int main(int argc, char* argv[])
         int ys = mysolver.simulation_grid.get_ysize();
         int zs = mysolver.simulation_grid.get_zsize();
 
-        for (int z = 0; z < zs; ++z)
-        {
-            for (int y = 0; y < ys; ++y)
-            {
-                for (int x = 0; x < xs; ++x)
-                {
+        for (int z = 0; z < zs; ++z){
+            for (int y = 0; y < ys; ++y){
+                for (int x = 0; x < xs; ++x){
                     if (!mysolver.simulation_grid.solid(x, y, z))
                         continue;
 
@@ -533,8 +552,7 @@ int main(int argc, char* argv[])
 
                     float s = 0.06f;   // half cube size
 
-                    Vec3 v[8] =
-                    {
+                    Vec3 v[8] ={
                         {c.x-s,c.y-s,c.z-s},
                         {c.x+s,c.y-s,c.z-s},
                         {c.x+s,c.y+s,c.z-s},
@@ -552,15 +570,13 @@ int main(int argc, char* argv[])
 
                     SDL_SetRenderDrawColor(renderer,0,80,200,255);
 
-                    const int edges[12][2]=
-                    {
+                    const int edges[12][2]={
                         {0,1},{1,2},{2,3},{3,0},
                         {4,5},{5,6},{6,7},{7,4},
                         {0,4},{1,5},{2,6},{3,7}
                     };
 
-                    for(auto &e : edges)
-                    {
+                    for(auto &e : edges){
                         SDL_RenderDrawLine(
                             renderer,
                             p[e[0]].x,p[e[0]].y,
@@ -573,8 +589,7 @@ int main(int argc, char* argv[])
 
         SDL_SetRenderDrawColor(renderer, 255,255,255,255);
 
-        for(auto& t : triangles)
-        {
+        for(auto& t : triangles){
             Point2D a = project(t.a, scale);
             Point2D b = project(t.b, scale);
             Point2D c = project(t.c, scale);
@@ -593,8 +608,8 @@ int main(int argc, char* argv[])
         }
 
         for(int z=20; z<40; z+=5){
-            for(int y=20; y<40; y+=5){
-                for(int x=20; x<60; x+=5){
+            for(int y=30; y<50; y+=5){
+                for(int x=20; x<80; x+=5){
 
                     if(mysolver.simulation_grid.solid(x,y,z))
                         continue;

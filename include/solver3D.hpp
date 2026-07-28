@@ -25,11 +25,11 @@ public:
     }
     void step(float dt, float inlet_speed){
         simulation_grid.u_prev = simulation_grid.u;
-        auto timer1 = std::chrono::steady_clock::now();
+        // auto timer1 = std::chrono::steady_clock::now();
         diffuse(horizontal, simulation_grid.u, simulation_grid.u_prev, viscosity, dt);
-        auto timer2 = std::chrono::steady_clock::now();
-        std::chrono::duration<float> d = std::chrono::duration_cast<std::chrono::duration<float>>(timer2 - timer1);
-        std::cout<<"diffusing took: "<<d<<" seconds\n";
+        // auto timer2 = std::chrono::steady_clock::now();
+        // std::chrono::duration<float> d = std::chrono::duration_cast<std::chrono::duration<float>>(timer2 - timer1);
+        // std::cout<<"diffusing took: "<<d<<" seconds\n";
         simulation_grid.v_prev = simulation_grid.v;
         diffuse(vertical, simulation_grid.v, simulation_grid.v_prev, viscosity, dt);
         simulation_grid.w_prev = simulation_grid.w;
@@ -239,7 +239,7 @@ private:
 
         std::vector<float> div(xsize * ysize * zsize, 0.0f);
 
-        auto timer1 = std::chrono::steady_clock::now();
+        // auto timer1 = std::chrono::steady_clock::now();
         #pragma omp parallel for collapse(3)
         for (int z = 1; z < zsize - 1; ++z) {
             for (int y = 1; y < ysize - 1; ++y) {
@@ -259,9 +259,9 @@ private:
             }
         }
         float max_div = 0.0f;
-        auto timer2 = std::chrono::steady_clock::now();
-        std::chrono::duration<float> d = std::chrono::duration_cast<std::chrono::duration<float>>(timer2 - timer1);
-        std::cout<<"div calculation took: "<<d<<" seconds\n";
+        // auto timer2 = std::chrono::steady_clock::now();
+        // std::chrono::duration<float> d = std::chrono::duration_cast<std::chrono::duration<float>>(timer2 - timer1);
+        // std::cout<<"div calculation took: "<<d<<" seconds\n";
 
         for (float d : div)
             max_div = std::max(max_div, std::abs(d));
@@ -272,7 +272,7 @@ private:
         set_boundary(scalar, p);
 
         constexpr int pressure_iterations = 20;
-        timer1 = std::chrono::steady_clock::now();
+        // timer1 = std::chrono::steady_clock::now();
         #pragma omp parallel
         {
             for (int k = 0; k < pressure_iterations; ++k){
@@ -331,9 +331,9 @@ private:
             }
 
         }
-        timer2 = std::chrono::steady_clock::now();
-        d = std::chrono::duration_cast<std::chrono::duration<float>>(timer2 - timer1);
-        std::cout<<"red black iterations took: "<<d<<" seconds\n";
+        // timer2 = std::chrono::steady_clock::now();
+        // d = std::chrono::duration_cast<std::chrono::duration<float>>(timer2 - timer1);
+        // std::cout<<"red black iterations took: "<<d<<" seconds\n";
         // float residual = 0;
         //
         // for (int z = 1; z < zsize-1; ++z) {
@@ -361,8 +361,8 @@ private:
         // }
 
         // std::cout << "Poisson residual = " << residual << '\n';
-        timer1 = std::chrono::steady_clock::now();
-        // #pragma omp parallel for collapse(3)
+        // timer1 = std::chrono::steady_clock::now();
+        #pragma omp parallel for collapse(3)
         for (int z = 1; z < zsize-1; ++z) {
             for (int y = 1; y < ysize - 1; ++y) {
                 for (int x = 1; x < xsize - 1; ++x) {
@@ -382,17 +382,17 @@ private:
                 }
             }
         }
-        timer2 = std::chrono::steady_clock::now();
-        d = std::chrono::duration_cast<std::chrono::duration<float>>(timer2 - timer1);
-        std::cout<<"corrections took: "<<d<<" seconds\n";
+        // timer2 = std::chrono::steady_clock::now();
+        // d = std::chrono::duration_cast<std::chrono::duration<float>>(timer2 - timer1);
+        // std::cout<<"corrections took: "<<d<<" seconds\n";
 
-        timer1 = std::chrono::steady_clock::now();
+        // timer1 = std::chrono::steady_clock::now();
         set_boundary(horizontal, u);
         set_boundary(vertical, v);
         set_boundary(depth, w);
-        timer2 = std::chrono::steady_clock::now();
-        d = std::chrono::duration_cast<std::chrono::duration<float>>(timer2 - timer1);
-        std::cout<<"boundary updates took: "<<d<<" seconds\n";
+        // timer2 = std::chrono::steady_clock::now();
+        // d = std::chrono::duration_cast<std::chrono::duration<float>>(timer2 - timer1);
+        // std::cout<<"boundary updates took: "<<d<<" seconds\n";
     }
     // @brief: Enforces reflection, inversion, or continuity conditions on the outer perimeter padding layer.
     void set_boundary(enum Boundary_type type, std::vector<float>& field){
