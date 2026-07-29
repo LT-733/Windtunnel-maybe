@@ -714,30 +714,30 @@ int main(int argc, char* argv[])
         Uint64 t3 = SDL_GetPerformanceCounter();
 
 
-        float solver_ms =
-            (float)(t1-t0) *
-            1000.0f /
-            SDL_GetPerformanceFrequency();
-
-        float draw_ms =
-            (float)(t2-t1) *
-            1000.0f /
-            SDL_GetPerformanceFrequency();
-
-        float present_ms =
-            (float)(t3-t2) *
-            1000.0f /
-            SDL_GetPerformanceFrequency();
-
-
-        std::cout
-            << "solver: "
-            << solver_ms
-            << " ms | draw: "
-            << draw_ms
-            << " ms | present: "
-            << present_ms
-            << " ms\n";
+        // float solver_ms =
+        //     (float)(t1-t0) *
+        //     1000.0f /
+        //     SDL_GetPerformanceFrequency();
+        //
+        // float draw_ms =
+        //     (float)(t2-t1) *
+        //     1000.0f /
+        //     SDL_GetPerformanceFrequency();
+        //
+        // float present_ms =
+        //     (float)(t3-t2) *
+        //     1000.0f /
+        //     SDL_GetPerformanceFrequency();
+        //
+        //
+        // std::cout
+        //     << "solver: "
+        //     << solver_ms
+        //     << " ms | draw: "
+        //     << draw_ms
+        //     << " ms | present: "
+        //     << present_ms
+        //     << " ms\n";
     }
 
 
