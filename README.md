@@ -21,12 +21,26 @@ cmake --build .
 ```
 
 And then you can run ```./main3``` and see the aerodynamics of cool 3D models!
+Just throw an obj or stl file into the root directory of this project and mod line #226 in ```main3.cpp``` to ```../the file you want to run.obj```. 
+
+Oh yeah the project won't work right now because you need to bring your own 3D model.
 
 <img width="957" height="599" alt="image" src="https://github.com/user-attachments/assets/3272dde8-ba21-4300-8987-a9236be8ccf8" />
 
 ### Wait, the model is facing the wrong way!
+
+
+<img width="957" height="599" alt="image" src="https://github.com/user-attachments/assets/f212d1a4-bde5-4bfc-93e9-074a766e5a64" />
+
 Yeah... That happens a lot. But the controls are simple. Press I, O, and P to adjust the orientation of your 3D model until the wind is flowing in the right way.
 
 Use + and - keys to increase or decrease the wind speed.
 
-Lastly, drag the image with your mouse to rotate the camera.
+Lastly, drag the image with your mouse to rotate the camera, and scroll your mouse wheel to zoom in and out.
+
+### How well does this thing perform?
+Descent, the whole reason why I used openmp is to cut down the run time of each frame. _**Before openmp the solver takes about 123ms each frame, but now it takes less than 40ms, making the performance about 25fps.**_ Mind you, this is all rendering using the CPU, and I am not even using the full performance of mine. 
+
+One caveat is that you may have less than 8 cores so just manually change line #88 inside of ```solver3D.hpp``` to ```omp_set_num_threads(However_many_cores_you_would_like_to_use_as_long_as_it_doesnt_exceed_what_your_cpu_can_do);``` to make sure the program runs. Performance could vary based on your CPU.
+
+Maybe one day I will actually update this codebase to make openmp scale dynamically to the cpu the user has. We'll see about that.
