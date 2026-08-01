@@ -18,3 +18,4 @@ target_link_libraries(windtunnel_maybe PRIVATE
 )
 
 target_include_directories(windtunnel_maybe PRIVATE include)
+target_compile_options(windtunnel_maybe PRIVATE -O3)
