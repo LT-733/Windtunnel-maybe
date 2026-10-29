@@ -44,5 +44,6 @@ Lastly, drag the image with your mouse to rotate the camera, and scroll your mou
 Descent, the whole reason why I used openmp is to cut down the run time of each frame. _**Before openmp the solver takes about 123ms each frame, but now it takes less than 40ms, making the performance about 25fps.**_ Mind you, this is all rendering using the CPU, and I am not even using the full performance of mine. 
 
 One caveat is that you may have less than 8 cores so just manually change line #88 inside of ```solver3D.hpp``` to ```omp_set_num_threads(However_many_cores_you_would_like_to_use_as_long_as_it_doesnt_exceed_what_your_cpu_can_do);``` to make sure the program runs. Performance could vary based on your CPU.
+**_UPDATE 29th Oct 2026: this hardcoded multithreading implimentation has been gone! Now I just use all available cores of our CPUs. However, this will increase computation time by about 2-3ms, so maybe I need more tweaks on that._**
 
 Maybe one day I will actually update this codebase to make openmp scale dynamically to the cpu the user has. We'll see about that.
