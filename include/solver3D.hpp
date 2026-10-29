@@ -85,7 +85,7 @@ private:
         const int xsize = simulation_grid.get_xsize();
         const int ysize = simulation_grid.get_ysize();
         const int zsize = simulation_grid.get_zsize();
-        omp_set_num_threads(8);
+        // omp_set_num_threads(8);
         #pragma omp parallel
         {
             for (int i = 0; i < 20; ++i) {

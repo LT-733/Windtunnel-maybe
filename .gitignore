@@ -3,3 +3,5 @@
 Wing.stl
 2022_bmw_m4_gt3.obj
 porsche_gt3rs_spoiler.obj
+build/
+build/**
